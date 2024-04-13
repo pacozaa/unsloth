@@ -395,7 +395,13 @@ def unsloth_save_model(
         print("Unsloth: Saving model...", end = "")
         if save_method != "lora": print(" This might take 10 minutes for Llama-7b...", end = "")
 
+        print("Unsloth: save_pretrained_settings", end = "")
+
+        print("save_pretrained_settings => {save_pretrained_settings}")
+
         model.save_pretrained(**save_pretrained_settings)
+
+        print("Unsloth: model save_pretrained...", end = "")
 
         if push_to_hub and hasattr(model, "config"):
             print("Saved to https://huggingface.co/" + save_pretrained_settings["save_directory"])
