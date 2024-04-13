@@ -834,48 +834,56 @@ def save_to_gguf(
     _run_installer = None, # Non blocking install of llama.cpp
     save_method          : str = "merged_16bit",
 ):
-    from transformers.models.llama.modeling_llama import logger
+    if save_method == "lora":
+        print_lora_info = \
+            f"==((====))==  Unsloth: Conversion from QLoRA to GGUF information\n"\
+            f"   \\\   /|    [0] Installing llama.cpp will take 3 minutes.\n"\
+            f"O^O/ \_/ \\    [1] Converting HF to llama.cpp LORA bin will take 3 minutes.\n"\
+            f' "-____-"     In total, you will have to wait around 6 minutes.\n'
+        print(print_lora_info)
+    else:    
+        from transformers.models.llama.modeling_llama import logger
 
-    if quantization_method.startswith("iq2"):
-        raise RuntimeError("Unsloth: Currently iq2 type quantizations aren't supported yet - sorry!")
+        if quantization_method.startswith("iq2"):
+            raise RuntimeError("Unsloth: Currently iq2 type quantizations aren't supported yet - sorry!")
 
-    # Careful convert.py is only for Llama / Mistral based archs
-    use_fast_convert = False
-    if   model_type == "llama":   use_fast_convert = True
-    elif model_type == "mistral": use_fast_convert = True
-    pass
-    logger.warning_once(f"Unsloth: Converting {model_type} model. Can use fast conversion = {use_fast_convert}.")
+        # Careful convert.py is only for Llama / Mistral based archs
+        use_fast_convert = False
+        if   model_type == "llama":   use_fast_convert = True
+        elif model_type == "mistral": use_fast_convert = True
+        pass
+        logger.warning_once(f"Unsloth: Converting {model_type} model. Can use fast conversion = {use_fast_convert}.")
 
-    if   quantization_method == "not_quantized":  quantization_method = "f16"
-    elif quantization_method == "fast_quantized": quantization_method = "q8_0"
-    elif quantization_method == "quantized":      quantization_method = "q4_k_m"
-    elif quantization_method is None:             quantization_method = "q8_0"
-    pass
+        if   quantization_method == "not_quantized":  quantization_method = "f16"
+        elif quantization_method == "fast_quantized": quantization_method = "q8_0"
+        elif quantization_method == "quantized":      quantization_method = "q4_k_m"
+        elif quantization_method is None:             quantization_method = "q8_0"
+        pass
 
-    if quantization_method not in ALLOWED_QUANTS.keys():
-        error = f"Unsloth: Quant method = [{quantization_method}] not supported. Choose from below:\n"
-        for key, value in ALLOWED_QUANTS.items():
-            error += f"[{key}] => {value}\n"
-        raise RuntimeError(error)
-    pass
+        if quantization_method not in ALLOWED_QUANTS.keys():
+            error = f"Unsloth: Quant method = [{quantization_method}] not supported. Choose from below:\n"
+            for key, value in ALLOWED_QUANTS.items():
+                error += f"[{key}] => {value}\n"
+            raise RuntimeError(error)
+        pass
 
-    print_info = \
-        f"==((====))==  Unsloth: Conversion from QLoRA to GGUF information\n"\
-        f"   \\\   /|    [0] Installing llama.cpp will take 3 minutes.\n"\
-        f"O^O/ \_/ \\    [1] Converting HF to GUUF 16bits will take 3 minutes.\n"\
-        f"\        /    [2] Converting GGUF 16bits to {quantization_method} will take 20 minutes.\n"\
-        f' "-____-"     In total, you will have to wait around 26 minutes.\n'
-    print(print_info)
+        print_info = \
+            f"==((====))==  Unsloth: Conversion from QLoRA to GGUF information\n"\
+            f"   \\\   /|    [0] Installing llama.cpp will take 3 minutes.\n"\
+            f"O^O/ \_/ \\    [1] Converting HF to GUUF 16bits will take 3 minutes.\n"\
+            f"\        /    [2] Converting GGUF 16bits to {quantization_method} will take 20 minutes.\n"\
+            f' "-____-"     In total, you will have to wait around 26 minutes.\n'
+        print(print_info)
 
-    # Check first_conversion format
-    if   first_conversion == "f16" : pass
-    elif first_conversion == "f32" : pass
-    elif first_conversion == "q8_0": pass
-    else:
-        raise RuntimeError(
-            f"Unsloth: `first_conversion` can only be one of ['f16', 'f32', 'q8_0'] and not `{first_conversion}`."
-        )
-    pass
+        # Check first_conversion format
+        if   first_conversion == "f16" : pass
+        elif first_conversion == "f32" : pass
+        elif first_conversion == "q8_0": pass
+        else:
+            raise RuntimeError(
+                f"Unsloth: `first_conversion` can only be one of ['f16', 'f32', 'q8_0'] and not `{first_conversion}`."
+            )
+        pass
 
     print("Unsloth: [0] Installing llama.cpp. This will take 3 minutes...")
     if _run_installer is not None:
