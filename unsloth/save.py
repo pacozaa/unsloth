@@ -925,13 +925,13 @@ def save_to_gguf(
           f"The output location will be {final_location}\n"\
           "This will take 3 minutes...")
 
-    if use_fast_convert:
+    if save_method == "lora":
+        command = f"python llama.cpp/convert-lora-to-ggml.py {model_directory}/adapter_config.json "\
+            f"--outfile {final_location}"
+    elif use_fast_convert:
         command = f"python llama.cpp/convert.py {model_directory} "\
             f"--outfile {final_location} --vocab-type hfft "\
             f"--outtype {first_conversion} --concurrency {n_cpus}"
-    elif save_method == "lora":
-        command = f"python llama.cpp/convert-lora-to-ggml.py {model_directory}/adapter_config.json "\
-            f"--outfile {final_location}"
     else:
         # Need to fix convert-hf-to-gguf.py for some models!
         _fix_gemma_gguf()
