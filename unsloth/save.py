@@ -836,7 +836,7 @@ def save_to_gguf(
 ):
     if save_method == "lora":
         print_lora_info = \
-            f"==((====))==  Unsloth: Conversion from LoRA adapter to llama.cpp bin file, you can use this with Ollama ADAPTER instruction information\n"\
+            f"==((====))==  Unsloth: Conversion from LoRA adapter to llama.cpp bin file, you can use this with Ollama ADAPTER instruction\n"\
             f"   \\\   /|    [0] Installing llama.cpp will take 3 minutes.\n"\
             f"O^O/ \_/ \\    [1] Converting HF to llama.cpp LORA bin will take 3 minutes.\n"\
             f' "-____-"     In total, you will have to wait around 6 minutes.\n'
