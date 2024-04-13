@@ -832,6 +832,7 @@ def save_to_gguf(
     quantization_method  : str = "fast_quantized",
     first_conversion     : str = "f16",
     _run_installer = None, # Non blocking install of llama.cpp
+    save_method          : str = "merged_16bit",
 ):
     from transformers.models.llama.modeling_llama import logger
 
@@ -915,8 +916,10 @@ def save_to_gguf(
     if n_cpus is None: n_cpus = 1
     n_cpus *= 2
     # Concurrency from https://rentry.org/llama-cpp-conversions#merging-loras-into-a-model
-    
-    final_location = f"./{model_directory}-unsloth.{first_conversion.upper()}.gguf"
+    if save_method == "lora":
+        final_location = f"./{model_directory}-unsloth.{first_conversion.upper()}.gguf"
+    else:
+        final_location = f"./{model_directory}-unsloth.{first_conversion.upper()}-lora-adapter.bin"
 
     print(f"Unsloth: [1] Converting model at {model_directory} into {first_conversion} GGUF format.\n"\
           f"The output location will be {final_location}\n"\
@@ -926,6 +929,9 @@ def save_to_gguf(
         command = f"python llama.cpp/convert.py {model_directory} "\
             f"--outfile {final_location} --vocab-type hfft "\
             f"--outtype {first_conversion} --concurrency {n_cpus}"
+    elif save_method == "lora":
+        command = f"python llama.cpp/convert-lora-to-ggml.py {model_directory}/adapter_config.json "\
+            f"--outfile {final_location}"
     else:
         # Need to fix convert-hf-to-gguf.py for some models!
         _fix_gemma_gguf()
@@ -1225,6 +1231,7 @@ def unsloth_save_pretrained_gguf(
     self,
     save_directory       : Union[str, os.PathLike],
     tokenizer            = None,
+    save_method          : str = "merged_16bit", # ["lora", "merged_16bit", "merged_4bit"]
     quantization_method  : str = "fast_quantized",
     first_conversion     : str = "f16",
     push_to_hub          : bool = False,
@@ -1279,7 +1286,7 @@ def unsloth_save_pretrained_gguf(
     arguments["model"]        = self
     arguments["tokenizer"]    = tokenizer
     arguments["push_to_hub"]  = False # We save ourselves
-    arguments["save_method"] = "merged_16bit" # Must be 16bit
+    arguments["save_method"] = save_method # Default 16bit
     del arguments["self"]
     del arguments["quantization_method"]
     del arguments["first_conversion"]
@@ -1330,7 +1337,7 @@ def unsloth_save_pretrained_gguf(
         gc.collect()
 
     model_type = self.config.model_type
-    file_location = save_to_gguf(model_type, new_save_directory, quantization_method, first_conversion, makefile)
+    file_location = save_to_gguf(model_type, new_save_directory, quantization_method, first_conversion, makefile, save_method)
 
     if push_to_hub:
         print("Unsloth: Uploading GGUF to Huggingface Hub...")
