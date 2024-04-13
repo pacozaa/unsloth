@@ -395,13 +395,7 @@ def unsloth_save_model(
         print("Unsloth: Saving model...", end = "")
         if save_method != "lora": print(" This might take 10 minutes for Llama-7b...", end = "")
 
-        print("Unsloth: save_pretrained_settings", end = "")
-
-        print("save_pretrained_settings => {save_pretrained_settings}")
-
         model.save_pretrained(**save_pretrained_settings)
-
-        print("Unsloth: model save_pretrained...", end = "")
 
         if push_to_hub and hasattr(model, "config"):
             print("Saved to https://huggingface.co/" + save_pretrained_settings["save_directory"])
@@ -838,10 +832,10 @@ def save_to_gguf(
     quantization_method  : str = "",
     first_conversion     : str = "f16",
     _run_installer = None, # Non blocking install of llama.cpp
-    save_method          : str = "merged_16bit",
+    save_lora            : bool = True,
 ):
 
-    if save_method == "lora":
+    if save_lora is True:
         print_lora_info = \
             f"==((====))==  Unsloth: Conversion from LoRA adapter to llama.cpp bin file, you can use this with Ollama ADAPTER instruction\n"\
             f"   \\\   /|    [0] Installing llama.cpp will take 3 minutes.\n"\
@@ -909,7 +903,7 @@ def save_to_gguf(
         install_llama_cpp_old(-10)
     pass
 
-    if save_method != "lora":
+    if save_lora is False:
         if   quantization_method == "f32":  first_conversion = "f32"
         elif quantization_method == "f16":  first_conversion = "f16"
         elif quantization_method == "q8_0": first_conversion = "q8_0"
@@ -936,7 +930,7 @@ def save_to_gguf(
     if n_cpus is None: n_cpus = 1
     n_cpus *= 2
     # Concurrency from https://rentry.org/llama-cpp-conversions#merging-loras-into-a-model
-    if save_method == "lora":
+    if save_lora is True:
         final_location = f"./{model_directory}-unsloth.{first_conversion.upper()}-lora-adapter.bin"
         print(f"Unsloth: [1] Converting model at {model_directory} into {first_conversion} bin format.\n"\
             f"The output location will be {final_location}\n"\
@@ -947,7 +941,7 @@ def save_to_gguf(
             f"The output location will be {final_location}\n"\
             "This will take 3 minutes...")
 
-    if save_method == "lora":
+    if save_lora is True:
         # Should support https://github.com/ggerganov/llama.cpp/tree/master/examples/export-lora in the future
         # but for now we use the convert-lora-to-ggml.py, which is enough to use it in Ollama ADAPTER instruction
         command = f"python llama.cpp/convert-lora-to-ggml.py {model_directory}/adapter_config.json "\
@@ -997,7 +991,7 @@ def save_to_gguf(
     pass
     print(f"Unsloth: Conversion completed! Output location: {final_location}")
 
-    if quantization_method != first_conversion and save_method != "lora":
+    if quantization_method != first_conversion and save_lora is False:
         old_location = final_location
         print(f"Unsloth: [2] Converting GGUF 16bit into {quantization_method}. This will take 20 minutes...")
         final_location = f"./{model_directory}-unsloth.{quantization_method.upper()}.gguf"
@@ -1255,7 +1249,7 @@ def unsloth_save_pretrained_gguf(
     self,
     save_directory       : Union[str, os.PathLike],
     tokenizer            = None,
-    save_method          : str = "merged_16bit", # ["lora", "merged_16bit", "merged_4bit"]
+    save_lora            : bool = True, # Save LoRA adapters
     quantization_method  : str = "fast_quantized",
     first_conversion     : str = "f16",
     push_to_hub          : bool = False,
@@ -1310,11 +1304,10 @@ def unsloth_save_pretrained_gguf(
     arguments["model"]        = self
     arguments["tokenizer"]    = tokenizer
     arguments["push_to_hub"]  = False # We save ourselves
-    # arguments["save_method"] = save_method # Default 16bit
+    arguments["save_method"] = "merged_16bit" # Must be 16bit
     del arguments["self"]
     del arguments["quantization_method"]
     del arguments["first_conversion"]
-    del arguments["save_method"]
 
     # Non blocking install GGUF first
     if not os.path.exists("llama.cpp"):
@@ -1362,7 +1355,7 @@ def unsloth_save_pretrained_gguf(
         gc.collect()
 
     model_type = self.config.model_type
-    file_location = save_to_gguf(model_type, new_save_directory, quantization_method, first_conversion, makefile, save_method)
+    file_location = save_to_gguf(model_type, new_save_directory, quantization_method, first_conversion, makefile, save_lora)
 
     if push_to_hub:
         print("Unsloth: Uploading GGUF to Huggingface Hub...")
@@ -1382,6 +1375,7 @@ def unsloth_push_to_hub_gguf(
     self,
     repo_id              : str,
     tokenizer            = None,
+    save_lora            : bool = True, # Save LoRA adapters
     quantization_method  : str = "fast_quantized",
     first_conversion     : str = "f16",
     use_temp_dir         : Optional[bool] = None,
@@ -1396,7 +1390,6 @@ def unsloth_push_to_hub_gguf(
     tags                 : Optional[List[str]] = None,
     temporary_location   : str = "_unsloth_temporary_saved_buffers",
     maximum_memory_usage : float = 0.85,
-    save_method          : str = "merged_16bit", # ["lora", "merged_16bit", "merged_4bit"]
 ):
     """
         Same as .push_to_hub(...) except 4bit weights are auto
@@ -1431,7 +1424,7 @@ def unsloth_push_to_hub_gguf(
     arguments["tokenizer"]      = tokenizer
     arguments["save_directory"] = repo_id
     arguments["push_to_hub"]    = False # We save ourselves
-    # arguments["save_method"]   = save_method # Default 16bit
+    arguments["save_method"]   = "merged_16bit" # Must be 16bit
     del arguments["self"]
     del arguments["repo_id"]
     del arguments["quantization_method"]
@@ -1483,7 +1476,7 @@ def unsloth_push_to_hub_gguf(
         gc.collect()
 
     model_type = self.config.model_type
-    file_location = save_to_gguf(model_type, new_save_directory, quantization_method, first_conversion, makefile, save_method)
+    file_location = save_to_gguf(model_type, new_save_directory, quantization_method, first_conversion, makefile, save_lora)
 
     print("Unsloth: Uploading GGUF to Huggingface Hub...")
     username = upload_to_huggingface(
