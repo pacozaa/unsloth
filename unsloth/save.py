@@ -903,27 +903,28 @@ def save_to_gguf(
         install_llama_cpp_old(-10)
     pass
 
-    if   quantization_method == "f32":  first_conversion = "f32"
-    elif quantization_method == "f16":  first_conversion = "f16"
-    elif quantization_method == "q8_0": first_conversion = "q8_0"
-    else:
-        # Quantized models must have f16 as the default argument
-        if   first_conversion == "f32" : pass
-        elif first_conversion == "f16" : pass
-        elif first_conversion == "q8_0":
-            logger.warning_once(
-                "Unsloth: Using q8_0 for the `first_conversion` will lose a bit of accuracy, "\
-                "but saves disk space!"
-            )
-            # first_conversion = "f16"
+    if save_method != "lora":
+        if   quantization_method == "f32":  first_conversion = "f32"
+        elif quantization_method == "f16":  first_conversion = "f16"
+        elif quantization_method == "q8_0": first_conversion = "q8_0"
+        else:
+            # Quantized models must have f16 as the default argument
+            if   first_conversion == "f32" : pass
+            elif first_conversion == "f16" : pass
+            elif first_conversion == "q8_0":
+                logger.warning_once(
+                    "Unsloth: Using q8_0 for the `first_conversion` will lose a bit of accuracy, "\
+                    "but saves disk space!"
+                )
+                # first_conversion = "f16"
+            pass
         pass
-    pass
 
-    # Non llama/mistral needs can only use f32 or f16
-    if not use_fast_convert and (first_conversion != "f16" or first_conversion != "f32"):
-        logger.warning_once("Unsloth: We must use f16 for non Llama and Mistral models.")
-        first_conversion = "f16"
-    pass
+        # Non llama/mistral needs can only use f32 or f16
+        if not use_fast_convert and (first_conversion != "f16" or first_conversion != "f32"):
+            logger.warning_once("Unsloth: We must use f16 for non Llama and Mistral models.")
+            first_conversion = "f16"
+        pass
 
     n_cpus = psutil.cpu_count()
     if n_cpus is None: n_cpus = 1
