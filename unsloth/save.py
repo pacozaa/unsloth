@@ -829,7 +829,7 @@ pass
 def save_to_gguf(
     model_type           : str,
     model_directory      : str = "unsloth_finetuned_model",
-    quantization_method  : str = "fast_quantized",
+    quantization_method  : str = "",
     first_conversion     : str = "f16",
     _run_installer = None, # Non blocking install of llama.cpp
     save_method          : str = "merged_16bit",
@@ -842,7 +842,11 @@ def save_to_gguf(
             f"O^O/ \_/ \\    [1] Converting HF to llama.cpp LORA bin will take 3 minutes.\n"\
             f' "-____-"     In total, you will have to wait around 6 minutes.\n'
         print(print_lora_info)
+        if quantization_method != "":
+            print("Unsloth: Ignoring quantization method since we're saving to LORA.")
     else:    
+        if quantization_method == "":
+            quantization_method = "fast_quantized"
         from transformers.models.llama.modeling_llama import logger
 
         if quantization_method.startswith("iq2"):
