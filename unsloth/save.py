@@ -1424,7 +1424,7 @@ def unsloth_push_to_hub_gguf(
     arguments["tokenizer"]      = tokenizer
     arguments["save_directory"] = repo_id
     arguments["push_to_hub"]    = False # We save ourselves
-    arguments["save_method"]   = save_method # Default 16bit
+    # arguments["save_method"]   = save_method # Default 16bit
     del arguments["self"]
     del arguments["repo_id"]
     del arguments["quantization_method"]
