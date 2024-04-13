@@ -1304,7 +1304,7 @@ def unsloth_save_pretrained_gguf(
     arguments["model"]        = self
     arguments["tokenizer"]    = tokenizer
     arguments["push_to_hub"]  = False # We save ourselves
-    arguments["save_method"] = save_method # Default 16bit
+    del arguments["save_method"]
     del arguments["self"]
     del arguments["quantization_method"]
     del arguments["first_conversion"]
