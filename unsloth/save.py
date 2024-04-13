@@ -918,12 +918,14 @@ def save_to_gguf(
     # Concurrency from https://rentry.org/llama-cpp-conversions#merging-loras-into-a-model
     if save_method == "lora":
         final_location = f"./{model_directory}-unsloth.{first_conversion.upper()}-lora-adapter.bin"
+        print(f"Unsloth: [1] Converting model at {model_directory} into {first_conversion} bin format.\n"\
+            f"The output location will be {final_location}\n"\
+            "This will take 3 minutes...")
     else:
         final_location = f"./{model_directory}-unsloth.{first_conversion.upper()}.gguf"
-
-    print(f"Unsloth: [1] Converting model at {model_directory} into {first_conversion} GGUF format.\n"\
-          f"The output location will be {final_location}\n"\
-          "This will take 3 minutes...")
+        print(f"Unsloth: [1] Converting model at {model_directory} into {first_conversion} GGUF format.\n"\
+            f"The output location will be {final_location}\n"\
+            "This will take 3 minutes...")
 
     if save_method == "lora":
         command = f"python llama.cpp/convert-lora-to-ggml.py {model_directory}/adapter_config.json "\
