@@ -836,7 +836,7 @@ def save_to_gguf(
 ):
     if save_method == "lora":
         print_lora_info = \
-            f"==((====))==  Unsloth: Conversion from QLoRA to GGUF information\n"\
+            f"==((====))==  Unsloth: Conversion from LoRA adapter to llama.cpp bin file, you can use this with Ollama ADAPTER instruction information\n"\
             f"   \\\   /|    [0] Installing llama.cpp will take 3 minutes.\n"\
             f"O^O/ \_/ \\    [1] Converting HF to llama.cpp LORA bin will take 3 minutes.\n"\
             f' "-____-"     In total, you will have to wait around 6 minutes.\n'
@@ -936,6 +936,8 @@ def save_to_gguf(
             "This will take 3 minutes...")
 
     if save_method == "lora":
+        # Should support https://github.com/ggerganov/llama.cpp/tree/master/examples/export-lora in the future
+        # but for now we use the convert-lora-to-ggml.py, which is enough to use it in Ollama ADAPTER instruction
         command = f"python llama.cpp/convert-lora-to-ggml.py {model_directory}/adapter_config.json "\
             f"--outfile {final_location}"
     elif use_fast_convert:
