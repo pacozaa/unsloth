@@ -834,6 +834,7 @@ def save_to_gguf(
     _run_installer = None, # Non blocking install of llama.cpp
     save_method          : str = "merged_16bit",
 ):
+
     if save_method == "lora":
         print_lora_info = \
             f"==((====))==  Unsloth: Conversion from LoRA adapter to llama.cpp bin file, you can use this with Ollama ADAPTER instruction\n"\
@@ -985,7 +986,7 @@ def save_to_gguf(
     pass
     print(f"Unsloth: Conversion completed! Output location: {final_location}")
 
-    if quantization_method != first_conversion:
+    if quantization_method != first_conversion and save_method != "lora":
         old_location = final_location
         print(f"Unsloth: [2] Converting GGUF 16bit into {quantization_method}. This will take 20 minutes...")
         final_location = f"./{model_directory}-unsloth.{quantization_method.upper()}.gguf"
@@ -1383,6 +1384,7 @@ def unsloth_push_to_hub_gguf(
     tags                 : Optional[List[str]] = None,
     temporary_location   : str = "_unsloth_temporary_saved_buffers",
     maximum_memory_usage : float = 0.85,
+    save_method          : str = "merged_16bit", # ["lora", "merged_16bit", "merged_4bit"]
 ):
     """
         Same as .push_to_hub(...) except 4bit weights are auto
@@ -1417,7 +1419,7 @@ def unsloth_push_to_hub_gguf(
     arguments["tokenizer"]      = tokenizer
     arguments["save_directory"] = repo_id
     arguments["push_to_hub"]    = False # We save ourselves
-    arguments["save_method"]   = "merged_16bit" # Must be 16bit
+    arguments["save_method"]   = save_method # Default 16bit
     del arguments["self"]
     del arguments["repo_id"]
     del arguments["quantization_method"]
@@ -1469,7 +1471,7 @@ def unsloth_push_to_hub_gguf(
         gc.collect()
 
     model_type = self.config.model_type
-    file_location = save_to_gguf(model_type, new_save_directory, quantization_method, first_conversion, makefile)
+    file_location = save_to_gguf(model_type, new_save_directory, quantization_method, first_conversion, makefile, save_method)
 
     print("Unsloth: Uploading GGUF to Huggingface Hub...")
     username = upload_to_huggingface(
