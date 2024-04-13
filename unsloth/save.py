@@ -1308,6 +1308,7 @@ def unsloth_save_pretrained_gguf(
     del arguments["self"]
     del arguments["quantization_method"]
     del arguments["first_conversion"]
+    del arguments["save_method"]
 
     # Non blocking install GGUF first
     if not os.path.exists("llama.cpp"):
