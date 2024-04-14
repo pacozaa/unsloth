@@ -1304,10 +1304,14 @@ def unsloth_save_pretrained_gguf(
     arguments["model"]        = self
     arguments["tokenizer"]    = tokenizer
     arguments["push_to_hub"]  = False # We save ourselves
-    arguments["save_method"] = "merged_16bit" # Must be 16bit
+    if save_lora is True:
+        arguments["save_method"] = "lora"
+    else:
+        arguments["save_method"] = "merged_16bit" # Must be 16bit
     del arguments["self"]
     del arguments["quantization_method"]
     del arguments["first_conversion"]
+    del arguments["save_lora"]
 
     # Non blocking install GGUF first
     if not os.path.exists("llama.cpp"):
