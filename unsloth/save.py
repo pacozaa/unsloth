@@ -210,6 +210,7 @@ def unsloth_save_model(
     pass
 
     save_pretrained_settings = dict(locals())
+    print(save_pretrained_settings)
     for deletion in ("model", "tokenizer", "save_method", "temporary_location", "maximum_memory_usage"):
         del save_pretrained_settings[deletion]
     pass
@@ -1328,6 +1329,7 @@ def unsloth_save_pretrained_gguf(
             python_install = install_python_non_blocking(["gguf", "protobuf"])
             git_clone.wait()
             makefile  = install_llama_cpp_make_non_blocking()
+            print(unsloth_save_model(**arguments))
             new_save_directory, old_username = unsloth_save_model(**arguments)
             python_install.wait()
         pass
